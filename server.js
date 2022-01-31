@@ -8,17 +8,6 @@ mongoose.connect(DB, () => {
   console.log('connected');
 });
 
-const TourSchema = mongoose.Schema({
-  name: {
-    type: String,
-    required: [true, 'A Tour must have a name'],
-  },
-  rating: { type: Number, default: 5 },
-  price: { type: Number, required: [true, 'A Tour must have a price'] },
-});
-
-const Tours = mongoose.model('tours', TourSchema);
-
 const port = app.listen(3000, () => {
   console.log(`App running on port ...`);
 });

@@ -1,6 +1,16 @@
 const fs = require('fs');
 const Tours = require('../models/tourModel');
 
+//get Top 5 Tours
+
+exports.aliasTopTours = (req, res, next) => {
+  req.query.limit = '3';
+  req.query.sort = '-ratingsAverage,price';
+  req.query.fields =
+    'name,price,description,summary, difficulty, ratingsAverage';
+  next();
+};
+
 // get All tours
 
 exports.getAllTours = async (req, res) => {
@@ -10,32 +20,50 @@ exports.getAllTours = async (req, res) => {
     const excludeFields = ['page', 'sort', 'limit', 'fields'];
     excludeFields.forEach((el) => delete queryObj[el]);
 
-    console.log(req.query, queryObj);
-    const newTour = await Tours.find(queryObj);
-
-    // both methods to query
-    // const newTour = await Tours.find({
-    //   duration: 5,
-    //   difficulty: 'easy',
-    // });
-
-    // const newTour = await Tours.find()
-    //   .where('duration')
-    //   .equals(5)
-    //   .where('difficulty')
-    //   .equals('easy');
-
     // EXECUTE QUERY
+    let queryStr = JSON.stringify(queryObj);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    let query = Tours.find(JSON.parse(queryStr));
+
+    //SORTING
+    if (req.query.sort) {
+      const sortBy = req.query.sort.split(',').join(' ');
+      query = query.sort(sortBy);
+    } else {
+      query = query.sort('-createdAt');
+    }
+
+    if (req.query.fields) {
+      const fields = req.query.fields.split(',').join(' ');
+      query = query.select(fields);
+    } else {
+      query = query.select('-__v');
+    }
+
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+
+    if (req.query.page) {
+      let numTours = await Tours.countDocuments();
+      if (skip >= numTours) {
+        throw new Error('This page does not exists');
+      }
+    }
+
     const tours = await query;
 
     //SEND RESPONSE
     res.status(200).json({
       status: 'success',
-      results: newTour.length,
-      data: { newTour },
+      results: tours.length,
+      data: { tours },
     });
   } catch {
-    res.status(404).json({ status: 'fail', message: error });
+    res.status(404).json({ status: 'fail', message: 'Could not do the query' });
   }
 };
 
@@ -150,4 +178,64 @@ exports.deleteTour = async (req, res) => {
 //     message: 'success',
 //     data: null,
 //   });
+// };
+
+// both methods to query
+// const newTour = await Tours.find({
+//   duration: 5,
+//   difficulty: 'easy',
+// });
+
+// const newTour = await Tours.find()
+//   .where('duration')
+//   .equals(5)
+//   .where('difficulty')
+//   .equals('easy');
+
+// exports.getAllTours = async (req, res) => {
+//   try {
+//     // BUILD QUERY
+//     //1)Filtering
+//     const queryObj = { ...req.query };
+//     const excludeFields = ['page', 'sort', 'limit', 'fields'];
+//     excludeFields.forEach((el) => delete queryObj[el]);
+
+//     // console.log(req.query, queryObj);
+//     // { difficulty: 'easy', duration: { gte: '5' }, sort: '1', limit: '10' }
+//     //gte gt lte lt
+
+//     //2)Advanced Filtering used for Chaining puprose
+
+//     let queryStr = JSON.stringify(queryObj);
+//     queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+//     let query = Tours.find(JSON.parse(queryStr));
+
+//     // 3) Sorting
+//     if (req.query.sort) {
+//       const sortBy = req.query.sort.split(',').join(' ');
+//       query = query.sort(sortBy);
+//     } else {
+//       query = query.sort(--createdAt);
+//     }
+
+//     if (req.query.fields) {
+//       console.log('keda ami');
+//     } else {
+//       console.log('nothing');
+//     }
+
+//     // 3.2) FILTERING
+
+//     // EXECUTE QUERY
+//     let tours = await query;
+
+//     //SEND RESPONSE
+//     res.status(200).json({
+//       status: 'success',
+//       results: tours.length,
+//       data: { tours },
+//     });
+//   } catch {
+//     res.status(404).json({ status: 'fail', message: 'Could not do the query' });
+//   }
 // };

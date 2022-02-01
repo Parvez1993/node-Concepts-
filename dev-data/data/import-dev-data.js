@@ -21,7 +21,6 @@ const tours = JSON.parse(
 const importData = async () => {
   try {
     await Tours.create(tours);
-    console.tour(tours);
   } catch (error) {
     console.tour(error);
   }

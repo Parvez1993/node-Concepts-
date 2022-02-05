@@ -21,20 +21,24 @@ const tours = JSON.parse(
 const importData = async () => {
   try {
     await Tours.create(tours);
-  } catch (error) {
-    console.tour(error);
+    console.log('Data successfully loaded!');
+  } catch (err) {
+    console.log(err);
   }
+  process.exit();
 };
 
 //delete all database
 
+// DELETE ALL DATA FROM DB
 const deleteData = async () => {
   try {
     await Tours.deleteMany();
-    console.log('data successfully deleted');
-  } catch (error) {
-    console.tour(error);
+    console.log('Data successfully deleted!');
+  } catch (err) {
+    console.log(err);
   }
+  process.exit();
 };
 
 // get the 3rd in process.argv

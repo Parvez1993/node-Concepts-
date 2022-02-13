@@ -1,14 +1,18 @@
+const { promisify } = require('util');
 const User = require('./../models/userModel');
 const catchAsync = require('../utils/CatchAsync');
 var jwt = require('jsonwebtoken');
+const AppError = require('../utils/AppError');
 
 exports.signup = catchAsync(async (req, res, next) => {
-  const newUser = await User.create({
-    name: req.body.name,
-    email: req.body.email,
-    password: req.body.password,
-    passwordConfirm: req.body.passwordConfirm,
-  });
+  // const newUser = await User.create({
+  //   name: req.body.name,
+  //   email: req.body.email,
+  //   password: req.body.password,
+  //   passwordConfirm: req.body.passwordConfirm,
+  // });
+
+  const newUser = await User.create(req.body);
 
   var token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
     expiresIn: process.env.JWT_EXPIRES_IN,
@@ -49,6 +53,7 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.protect = catchAsync(async (req, res, next) => {
+  // 1. check for token
   let token;
   if (
     req.headers.authorization &&
@@ -63,5 +68,33 @@ exports.protect = catchAsync(async (req, res, next) => {
     );
   }
 
+  // 2. verify token
+
+  const decoded = await promisify(jwt.verify)(token, process.env.JWT_SECRET);
+  console.log(decoded);
+
+  //3. Check if user still exists
+
+  const freshUser = await User.findById(decoded.id);
+
+  if (!freshUser) {
+    return next(
+      new AppError('The user belonging to the token does not exists', 401)
+    );
+  }
+
+  //5 check if user changed password after token was issued refer in userController
+
+  freshUser.changePasswordAfter(decoded.iat);
+
+  if (freshUser.changePasswordAfter(decoded.iat)) {
+    return next(
+      new AppError('User recently chaned password !! Please login again', 401)
+    );
+  }
+
+  //Grant access to protected route
+
+  req.user = freshUser;
   next();
 });

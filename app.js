@@ -22,6 +22,7 @@ app.get('/', function (req, res) {
 
 app.use((req, res, next) => {
   req.timer = new Date().toISOString();
+  console.log(req.headers);
   next();
 });
 

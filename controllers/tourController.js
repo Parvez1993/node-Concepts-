@@ -69,22 +69,24 @@ class APIFeatures {
 }
 
 exports.getAllTours = catchAsync(async (req, res) => {
-  const features = new APIFeatures(Tours.find(), req.query)
-    .filter()
-    .sort()
-    .limitFields()
-    .paginate();
+  try {
+    const features = new APIFeatures(Tours.find(), req.query)
+      .filter()
+      .sort()
+      .limitFields()
+      .paginate();
 
-  const tours = await features.query;
+    const tours = await features.query;
 
-  //SEND RESPONSE
-  res.status(200).json({
-    status: 'success',
-    results: tours.length,
-    data: { tours },
-  });
-
-  res.status(404).json({ status: 'fail', message: 'Could not do the query' });
+    //SEND RESPONSE
+    res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: { tours },
+    });
+  } catch (error) {
+    res.status(404).json({ status: 'fail', message: 'Could not do the query' });
+  }
 });
 
 //create new tour method 2 without database and reading from file

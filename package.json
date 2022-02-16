@@ -15,6 +15,10 @@
     "bcryptjs": "^2.4.3",
     "dotenv": "^14.3.2",
     "express": "^4.17.2",
+    "express-mongo-sanitize": "^2.2.0",
+    "express-rate-limit": "^6.2.1",
+    "helmet": "^5.0.2",
+    "hpp": "^0.2.3",
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^6.1.8",
     "morgan": "^1.10.0",
@@ -23,6 +27,7 @@
     "nodemon": "^2.0.15",
     "slugify": "^1.6.5",
     "util": "^0.12.4",
-    "validator": "^13.7.0"
+    "validator": "^13.7.0",
+    "xss-clean": "^0.1.1"
   }
 }
